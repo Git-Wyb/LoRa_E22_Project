@@ -45,18 +45,23 @@ void main(void)
     InitialFlashReg(); //flash EEPROM
     TIM4_Init();       // 定时�?
     UART1_INIT();
-    lcd_init();
     _EI();
-    //e22_hal_work_mode(WORK_MODE_TRANSPARENT);
-    e22_test_mode(1);
-    menu_start();
-
+    if(Mode_Sel != SLAVE_MODE)
+    {
+        lcd_init();
+        menu_start();
+    }
+    else{key_sta = Key_Stop;}
+    E22_Test_Mode();
+    e22_hal_work_mode(WORK_MODE_TRANSPARENT);
+    //e22_test_mode(1);
     while (1)
     {
         ClearWDT(); // Service the WDT
         //time_sw = 500;
         //while(time_sw);
-        check_key_sta();
+        if(Mode_Sel != SLAVE_MODE) check_key_sta();
+        else tx_state();
         uart1_check_rx_done(sbuff,&length);
         if(time_sw==0 && flag_led)
         {

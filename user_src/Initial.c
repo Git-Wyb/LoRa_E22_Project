@@ -149,6 +149,10 @@ void LED_GPIO_Init(void)
 **/
 void KEY_GPIO_Init(void)
 {
+    PIN_TEST_DDR = Input;
+    PIN_TEST_CR1 = Pull_up;
+    PIN_TEST_CR2 = InterruptDisable;
+
     KEY_UP_DDR = Input;            // 输入     test�?
     KEY_UP_CR1 = Pull_up;          //1: Input with pull-up 0: Floating input
     KEY_UP_CR2 = InterruptDisable; //禁止中断
@@ -256,8 +260,9 @@ void key_1ms_scan_slave(void)
                 if(key_ms > 50)  //ms
                 {
                     key_ms = 0;
-                    if(KEY_STOP_IN == 1)
+                    if(KEY_STOP_IN == 1 && flag_tx_stop == 0)
                     {
+                        flag_tx_stop = 1;
                         key_sta = Key_Stop;
                         Receiver_OUT_OPEN = 0;
                         Receiver_OUT_STOP = 1;
@@ -271,8 +276,9 @@ void key_1ms_scan_slave(void)
                 if(key_ms > 50)  //ms
                 {
                     key_ms = 0;
-                    if(KEY_CLOSE_IN == 1)
+                    if(KEY_CLOSE_IN == 1 && flag_tx_close == 0)
                     {
+                        flag_tx_close = 1;
                         key_sta = Key_Close;
                         Receiver_OUT_OPEN = 0;
                         Receiver_OUT_STOP = 0;
@@ -290,8 +296,9 @@ void key_1ms_scan_slave(void)
                 if(key_ms > 50)  //ms
                 {
                     key_ms = 0;
-                    if(KEY_OPEN_IN == 1)
+                    if(KEY_OPEN_IN == 1 && flag_tx_open == 0)
                     {
+                        flag_tx_open = 1;
                         key_sta = Key_Open;
                         Receiver_OUT_OPEN = 1;
                         Receiver_OUT_STOP = 0;
@@ -305,8 +312,9 @@ void key_1ms_scan_slave(void)
                 if(key_ms > 50)  //ms
                 {
                     key_ms = 0;
-                    if(KEY_CLOSE_IN == 1)
+                    if(KEY_CLOSE_IN == 1 && flag_tx_close == 0)
                     {
+                        flag_tx_close = 1;
                         key_sta = Key_Close;
                         Receiver_OUT_OPEN = 0;
                         Receiver_OUT_STOP = 0;
@@ -324,8 +332,9 @@ void key_1ms_scan_slave(void)
                 if(key_ms > 50)  //ms
                 {
                     key_ms = 0;
-                    if(KEY_OPEN_IN == 1)
+                    if(KEY_OPEN_IN == 1 && flag_tx_open == 0)
                     {
+                        flag_tx_open = 1;
                         key_sta = Key_Open;
                         Receiver_OUT_OPEN = 1;
                         Receiver_OUT_STOP = 0;
@@ -339,8 +348,9 @@ void key_1ms_scan_slave(void)
                 if(key_ms > 50)  //ms
                 {
                     key_ms = 0;
-                    if(KEY_STOP_IN == 1)
+                    if(KEY_STOP_IN == 1 && flag_tx_stop == 0)
                     {
+                        flag_tx_stop = 1;
                         key_sta = Key_Stop;
                         Receiver_OUT_OPEN = 0;
                         Receiver_OUT_STOP = 1;

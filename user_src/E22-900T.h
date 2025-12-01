@@ -207,9 +207,20 @@ typedef union
 	e22_specify_target_buffer_t target;
 }e22_opt_buffer_t;
 
+typedef struct
+{
+	int work_mode;
+	int rate_mode;
+	int channel;
+	int tx_power;
+	int tx_count;
+}menu_config_t;
+
 
 void e22_hal_work_mode(work_mode_t mode);
 void e22_test_mode(uint8_t mode);
 void e22_hal_uart_tx(uint8_t *buffer, uint16_t length);
+void E22_Test_Mode(void);
+void tx_state(void);
 
 #endif

@@ -243,10 +243,14 @@ extern u16 BASE_TIME_BEEP_off;
 #define flag_rssi_set       flag3_Un.FlagByte_bit6
 #define flag_scan_off       flag3_Un.FlagByte_bit7
 
-#define flag_rssiset_tx     flag4_Un.FlagByte_bit0
+#define flag_tx_stop        flag4_Un.FlagByte_bit0
 #define flag_rssiset_txen   flag4_Un.FlagByte_bit1
 #define flag_key            flag4_Un.FlagByte_bit2
 #define flag_led            flag4_Un.FlagByte_bit3
+#define flag_tx_carr        flag4_Un.FlagByte_bit4
+#define flag_tx_modu        flag4_Un.FlagByte_bit5
+#define flag_tx_open        flag4_Un.FlagByte_bit6
+#define flag_tx_close       flag4_Un.FlagByte_bit7
 
 #define Save_Disable_Beep 0xAA
 

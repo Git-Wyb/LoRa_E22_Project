@@ -63,6 +63,8 @@ static uint8_t tx_DEFAULT[] = "AT+DEFAULT";
 /*模组重启*/
 static uint8_t tx_RESET[] = "AT+RESET";
 
+u8 txdata[] = {0x11,0x12,0x13,0x14,0x15};
+
 /**
  * E22-900T22S 默认配置参数
  */
@@ -113,6 +115,15 @@ static const e22_register_t register_default =
 	},
 };
 
+menu_config_t user_config =
+{
+	.work_mode = 0,    // 工作模式
+	.rate_mode = 2,    // 空速模式 挡位选择
+	.channel   = 18,   // 通信信道
+	.tx_power  = 22,   // 发射功率 挡位选择
+	.tx_count  = 10,   // 数据发送测试总次数
+};
+
 void e22_hal_uart_tx(uint8_t *buffer, uint16_t length)
 {
     UART1_Send_Data(buffer,length);
@@ -131,6 +142,36 @@ void e22_command_test(uint8_t *com,uint16_t length)
     e22_hal_uart_tx(com,length);
 }
 
+void tx_state(void)
+{
+    if(flag_tx_stop)
+    {
+        flag_tx_stop = 0;
+        txdata[2] = 0x04;
+        e22_hal_uart_tx(txdata,5);
+        flag_led = 1;
+        time_sw = 300;
+        Receiver_LED_TX = 1;
+    }
+    if(flag_tx_open)
+    {
+        flag_tx_open = 0;
+        txdata[2] = 0x08;
+        e22_hal_uart_tx(txdata,5);
+        flag_led = 1;
+        time_sw = 300;
+        Receiver_LED_TX = 1;
+    }
+    if(flag_tx_close)
+    {
+        flag_tx_close = 0;
+        txdata[2] = 0x02;
+        e22_hal_uart_tx(txdata,5);
+        flag_led = 1;
+        time_sw = 300;
+        Receiver_LED_TX = 1;
+    }
+}
 
 static void e22_send_config_command(const e22_register_t *config)
 {
@@ -152,6 +193,33 @@ static void e22_send_config_command(const e22_register_t *config)
 	e22_hal_uart_tx( (uint8_t*)&e22_buffer, sizeof(e22_register_t) + 3);
 }
 
+void E22_Test_Mode(void)
+{
+    while(PIN_TestIN == 0)
+    {
+        ClearWDT();
+        if(key_sta == Key_Open && flag_tx_carr == 0)
+        {
+            flag_tx_carr = 1;
+            Receiver_LED_TX = 1;
+            e22_test_mode(1);
+        }
+        else if(key_sta == Key_Close && flag_tx_modu == 0)
+        {
+            flag_tx_modu = 1;
+            Receiver_LED_TX = 1;
+            e22_test_mode(2);
+        }
+        else if(key_sta == Key_Stop && (flag_tx_carr==1 || flag_tx_modu==1))
+        {
+            flag_tx_carr = 0;
+            flag_tx_modu = 0;
+            Receiver_LED_TX = 0;
+            e22_test_mode(0);
+        }
+    }
+}
+
 void e22_test_mode(uint8_t mode)
 {
     switch(mode)
@@ -167,6 +235,7 @@ void e22_test_mode(uint8_t mode)
         case 0:
             e22_command_test(tx_carrier0,strlen(tx_carrier0));
             e22_command_test(tx_modul0,strlen(tx_modul0));
+            break;
     }
 }
 
