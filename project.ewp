@@ -1706,9 +1706,6 @@
       <name>$PROJ_DIR$\user_src\ram.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\user_src\spi.c</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\user_src\stm8l15x_it.c</name>
     </file>
     <file>

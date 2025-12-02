@@ -207,14 +207,23 @@ typedef union
 	e22_specify_target_buffer_t target;
 }e22_opt_buffer_t;
 
+/*
+中继的模块地址：高8位H = 模块1的网络ID；低8位L = 模块2的网络ID；
+模块地址相同，可以相互通信。
+Relay module address: The upper 8 bits H = Network ID of Module 1; the lower 8 bits L = Network ID of Module 2;
+If the module addresses are the same, they can communicate with each other.
+*/
 typedef struct
 {
-	int work_mode;
-	int rate_mode;
-	int channel;
-	int tx_power;
-	int tx_count;
-}menu_config_t;
+	uint8_t channel;
+    uint8_t modu_addr_h;
+    uint8_t modu_addr_l;
+    uint8_t network_id;
+    on_off_t router_mode;
+    transmit_power_t tx_power;
+    radio_rate_t rate_mode;
+    uint8_t tx_count;
+}user_config_t;
 
 
 void e22_hal_work_mode(work_mode_t mode);
@@ -222,5 +231,6 @@ void e22_test_mode(uint8_t mode);
 void e22_hal_uart_tx(uint8_t *buffer, uint16_t length);
 void E22_Test_Mode(void);
 void tx_state(void);
+void E22_Data_Check(unsigned char *buffer,unsigned long length);
 
 #endif

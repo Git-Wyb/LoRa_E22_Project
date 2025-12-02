@@ -32,7 +32,6 @@
 #include "E22-900T.h"
 #include "display.h"
 
-u8 sstr[] = {"Setting"};
 u8 sbuff[20];
 u32 length = 0;
 void main(void)
@@ -58,8 +57,6 @@ void main(void)
     while (1)
     {
         ClearWDT(); // Service the WDT
-        //time_sw = 500;
-        //while(time_sw);
         if(Mode_Sel != SLAVE_MODE) check_key_sta();
         else tx_state();
         uart1_check_rx_done(sbuff,&length);

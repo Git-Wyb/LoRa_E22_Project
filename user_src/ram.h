@@ -192,6 +192,7 @@ extern Flag_Un flag1_Un;
 extern Flag_Un flag2_Un;
 extern Flag_Un flag3_Un;
 extern Flag_Un flag4_Un;
+extern Flag_Un flag5_Un;
 extern u8 auto_over_time;
 extern u16 Time_NoCheck_AutoSignal;
 extern u16 Time_Check_AutoSignal;
@@ -251,6 +252,11 @@ extern u16 BASE_TIME_BEEP_off;
 #define flag_tx_modu        flag4_Un.FlagByte_bit5
 #define flag_tx_open        flag4_Un.FlagByte_bit6
 #define flag_tx_close       flag4_Un.FlagByte_bit7
+
+#define flag_rx_time        flag5_Un.FlagByte_bit0
+#define flag_slave_rx       flag5_Un.FlagByte_bit1
+#define flag_key_enter      flag5_Un.FlagByte_bit2
+#define flag_step           flag5_Un.FlagByte_bit3
 
 #define Save_Disable_Beep 0xAA
 
@@ -346,5 +352,9 @@ extern u8 time_tf2_Detection;
 extern u8 RSSI_SET_VAL;
 extern u8 key_sta;
 extern u8 Mode_Sel;
+extern u16 time_txcheck;
+extern u32 time_rxack;
+extern u8 rx_slave_num;
+extern u16 time_step;
 
 #endif

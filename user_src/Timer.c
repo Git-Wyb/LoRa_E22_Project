@@ -31,6 +31,11 @@ void key_1ms_scan_slave(void);
 void TIM4_UPD_OVF(void)
 {
     if(time_sw) time_sw--;
+    if(time_txcheck) time_txcheck--;
+    if(flag_rx_time) time_rxack++;
+    else time_rxack = 0;
+    if(time_step) time_step--;
+
     BEEP_function();
     if(Mode_Sel == SLAVE_MODE) key_1ms_scan_slave();
     else key_1ms_scan_host();

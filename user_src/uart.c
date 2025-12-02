@@ -15,6 +15,8 @@
 #include "IIC.h"
 #include "fifo.h"
 #include "Timer.h"
+#include "E22-900T.h"
+
 #define TXD1_enable (USART1_CR2 = 0x08) // 允许发�??
 #define RXD1_enable (USART1_CR2 = 0x24) // 允许接收及其中断
 
@@ -161,10 +163,11 @@ bool uart1_check_rx_done( unsigned char *buffer , unsigned long *length )
 
 		/* 串口数据拷贝 */
 		fifo_read( &fifo_uart1_rx, buffer, fifo_rx_len );
-
 		*length = fifo_rx_len;
         fifo_clear(&fifo_uart1_rx);
 		ret = true;
+
+        E22_Data_Check(buffer,fifo_rx_len);
         _ReqBuzzer(400,1,1);
         Receiver_LED_RX = 1;
         Receiver_LED_OUT = 1;
@@ -172,11 +175,6 @@ bool uart1_check_rx_done( unsigned char *buffer , unsigned long *length )
         flag_led = 1;
 	}
 	return ret;
-}
-
-void Recv_E22_Data(void)
-{
-
 }
 
 void UART2_INIT(void)

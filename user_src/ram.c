@@ -10,8 +10,9 @@
 u8 DEF_APP_TX_freq=4;
 
 u16 time_sw = 0;
-
-
+u16 time_txcheck = 0;
+u32 time_rxack = 0;
+u16 time_step = 0;
 
 uFLAG FLAG_test1;
 volatile uFLAG FLAG0;
@@ -152,6 +153,7 @@ Flag_Un flag1_Un = {0};
 Flag_Un flag2_Un = {0};
 Flag_Un flag3_Un = {0};
 Flag_Un flag4_Un = {0};
+Flag_Un flag5_Un = {0};
 Flag_Un Sw_Un = {0};
 u8 auto_over_time = 2;  //自动下降时间，默认为10s
 u16 Time_NoCheck_AutoSignal = 0;
@@ -216,3 +218,5 @@ u8 test0 = 0;
 u8 RSSI_SET_VAL = 50;
 u8 key_sta = Key_None;
 u8 Mode_Sel = HOST_MODE; //SLAVE_MODE ,HOST_MODE
+u8 rx_slave_num = 0;
+
