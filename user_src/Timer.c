@@ -35,9 +35,10 @@ void TIM4_UPD_OVF(void)
     if(flag_rx_time) time_rxack++;
     else time_rxack = 0;
     if(time_step) time_step--;
+    if(time_slave_ack) time_slave_ack--;
 
     BEEP_function();
-    if(Mode_Sel == SLAVE_MODE) key_1ms_scan_slave();
+    if(mode_sel.Mode_Type == SLAVE_TYPE) key_1ms_scan_slave();
     else key_1ms_scan_host();
     uart1_rx_timeout_1ms_callback();
 

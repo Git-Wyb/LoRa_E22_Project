@@ -32,34 +32,52 @@
 #include "E22-900T.h"
 #include "display.h"
 
-u8 sbuff[20];
+u8 sbuff[1024];
 u32 length = 0;
+void user_mode_init(void);
 void main(void)
 {
+    mode_sel.Mode_Type = HOST_TYPE;//SLAVE_TYPE;HOST_TYPE
+    mode_sel.host_num = HOST_14;
+    mode_sel.salve_num = SLAVE_1;
+
     _DI();             // 关全�?中断
     RAM_clean();       // 清除RAM
-    //WDT_init();        //看门狿
+    WDT_init();        //看门狿
     VHF_GPIO_INIT();   //IO初始�?
     SysClock_Init();   //系统时钟初始�?
     InitialFlashReg(); //flash EEPROM
     TIM4_Init();       // 定时�?
     UART1_INIT();
     _EI();
-    if(Mode_Sel != SLAVE_MODE)
+    user_mode_init();
+
+    if(mode_sel.Mode_Type != SLAVE_TYPE)
     {
         lcd_init();
         menu_start();
     }
-    else{key_sta = Key_Stop;}
+    else key_sta = Key_Stop;
+
+    e22_user_config_init(mode_sel);
     E22_Test_Mode();
+    e22_parameter_init();
     e22_hal_work_mode(WORK_MODE_TRANSPARENT);
     //e22_test_mode(1);
     while (1)
     {
         ClearWDT(); // Service the WDT
-        if(Mode_Sel != SLAVE_MODE) check_key_sta();
-        else tx_state();
+        if(mode_sel.Mode_Set != !SelDev_ModeIN) while(1);
+        if(mode_sel.Mode_Type == HOST_TYPE)
+        {
+            if(mode_sel.Mode_Set == NORMAL_MODE) check_key_sta();
+            host_tx_check_slave_sta(mode_sel);
+            e22_check_ack_timeout();
+        }
+
         uart1_check_rx_done(sbuff,&length);
+
+        if(mode_sel.Mode_Type == SLAVE_TYPE) slave_tx_sta(mode_sel.salve_num);
         if(time_sw==0 && flag_led)
         {
             flag_led = 0;

@@ -94,5 +94,6 @@ unsigned char asc_hex(unsigned char asc);
 unsigned char hex_asc(unsigned char hex);
 unsigned char asc_hex_2(unsigned char asc1, unsigned char asc0);
 bool uart1_check_rx_done( unsigned char *buffer , unsigned long *length );
+void uart1_wait_response_blocked( UINT8 * buffer, UINT16 *length );
 
 #endif

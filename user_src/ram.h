@@ -257,6 +257,8 @@ extern u16 BASE_TIME_BEEP_off;
 #define flag_slave_rx       flag5_Un.FlagByte_bit1
 #define flag_key_enter      flag5_Un.FlagByte_bit2
 #define flag_step           flag5_Un.FlagByte_bit3
+#define flag_tx_start       flag5_Un.FlagByte_bit4
+#define flag_check_timeout  flag5_Un.FlagByte_bit5
 
 #define Save_Disable_Beep 0xAA
 
@@ -302,9 +304,43 @@ typedef enum
     Key_Close
 }KEY_STA;
 
-#define  HOST_MODE  0  //主机
-#define  RELAY_MODE 1  //中继
-#define  SLAVE_MODE 2  //子机
+typedef enum
+{
+    HOST_TYPE = 0,   //主机
+    SLAVE_TYPE   //子机
+}MODE_TYPE_ENUM;
+
+typedef enum
+{
+    NORMAL_MODE = 0, //正常模式
+    RELAY_MODE   //中继
+}MODE_SET_ENUM;
+
+typedef enum
+{
+    HOST_11 = 11,
+    HOST_12,
+    HOST_13,
+    HOST_14,
+    HOST_15
+}HOST_SEL;
+
+typedef enum
+{
+    SLAVE_1 = 1,
+    SLAVE_2,
+    SLAVE_3,
+    SLAVE_4,
+    SLAVE_5,
+}SLAVE_SEL;
+
+typedef struct{
+     MODE_TYPE_ENUM Mode_Type;
+     MODE_SET_ENUM  Mode_Set;
+     u8 enter_step;
+     HOST_SEL host_num;  //11-14
+     SLAVE_SEL salve_num; //1-10
+}MODE_SET_STU;
 
 extern Wireless_Body Struct_DATA_Packet_Contro,Struct_DATA_Packet_Contro_buf;
 extern Wireless_Body Uart_Struct_DATA_Packet_Contro,Last_Uart_Struct_DATA_Packet_Contro;
@@ -356,5 +392,10 @@ extern u16 time_txcheck;
 extern u32 time_rxack;
 extern u8 rx_slave_num;
 extern u16 time_step;
+extern MODE_SET_STU mode_sel;
+extern u8 key_step;
+extern u8 Slave_Num;
+extern u8 step_tx_timeout;
+extern u16 time_slave_ack;
 
 #endif

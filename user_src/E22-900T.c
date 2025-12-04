@@ -33,15 +33,15 @@ static const uint8_t request_env_rssi[6] = {0xC0,0xC1,0xC2,0xC3,0x00,0x01};
 /**
  * AT指令 读取设备名
  */
-static char request_name[] = "AT+DEVTYPE=?";
+static uint8_t request_name[] = "AT+DEVTYPE=?";
 
 /**
  * AT指令 读取固件版本
  */
-static char request_version[] = "AT+FWCODE=?";
+static uint8_t request_version[] = "AT+FWCODE=?";
 
 //设置后⽴即保存,但需要重启或者切换模式后才⽣效.
-static char set_fpower[] = "AT+FPOWER=10,13,17,22";
+static uint8_t set_fpower[] = "AT+FPOWER=10,13,17,22";
 
 /*
 发射频率922.2MHz,实测偏了2K，21ppm误差
@@ -49,19 +49,26 @@ SF5-9 BW125KHz  可以。SF9，速率实测2.44Kbps
 SF10  BW125不行，250KHz可以
 SF11  BW125、250不行，500KHz可以
 */
-/*1使能⾃定义调试参数,10设置LoRa的扩频因⼦为SF10,4发射带宽BW为125KHz,1编码率为CR4/5*/
-static char set_sf[] = "AT+ULORAM=1,7,4,1";
+/*1使能⾃定义调试参数,5设置LoRa的扩频因⼦为SF5,4发射带宽BW为125KHz,1编码率为CR4/5*/
+static uint8_t set_sf5[] = "AT+ULORAM=1,5,4,1";
+static uint8_t set_sf6[] = "AT+ULORAM=1,6,4,1";
+static uint8_t set_sf7[] = "AT+ULORAM=1,7,4,1";
+static uint8_t set_sf8[] = "AT+ULORAM=1,8,4,1";
+static uint8_t set_sf9[] = "AT+ULORAM=1,9,4,1";
+static uint8_t set_sf10[] = "AT+ULORAM=1,10,5,1";
+static uint8_t set_sf11[] = "AT+ULORAM=1,11,6,1";
 
 /*使能⾃定义载波频率参数,设置起始基准频率为922.2MHz,
 信道频率间隔200KHz,最⼤截⽌信道为第10信道:即为922.2+10*0.2=924.2MHz*/
-static char set_freq[] = "AT+UFREQ=1,922200000,200000,10";
+static uint8_t set_freq[] = "AT+UFREQ=1,923200000,200000,10";
+static uint8_t set_checkfreq[] = "AT+UFREQ=?";
 
 /*1使能单载波发射,在922.2MHz持续输出,设置参数不做保存,重启丢失*/
-static uint8_t tx_carrier1[] = "AT+SWAVE=1,922200000";
+static uint8_t tx_carrier1[] = "AT+SWAVE=1,923200000";
 static uint8_t tx_carrier0[] = "AT+SWAVE=0,0";//关闭
 
 /*使能调制波发射,在922.2MHz持续输出*/
-static uint8_t tx_modul1[] = "AT+MWAVE=1,922200000";
+static uint8_t tx_modul1[] = "AT+MWAVE=1,923200000";
 static uint8_t tx_modul0[] = "AT+MWAVE=0,0";//0关闭
 
 /*恢复到默认参数*/
@@ -70,8 +77,43 @@ static uint8_t tx_DEFAULT[] = "AT+DEFAULT";
 /*模组重启*/
 static uint8_t tx_RESET[] = "AT+RESET";
 
-u8 txdata[] = {0x11,0x12,0x13,0x14,0x15};
+u8 e22_txdata[] = {0x00,0x00,0x00,0x11,0x12,0x13,0x14,0x15};
 
+user_config_t host_config_default = {
+    .channel = 0,           //freq channel
+    .modu_addr_h = 0x00,
+    .modu_addr_l = 0x00,
+    .network_id = 0x00,     //35
+    .router_mode = OFF,
+    .tx_power = TX_POWER_DBM_13,
+    .rate_mode = RADIO_RATE_2400,
+    .tx_count = 5
+};
+
+user_config_t slave_config_default = {
+    .channel = 0,           //freq channel
+    .modu_addr_h = 0x00,
+    .modu_addr_l = 0x00,
+    .network_id = 0x00,     //35
+    .router_mode = OFF,
+    .tx_power = TX_POWER_DBM_13,
+    .rate_mode = RADIO_RATE_2400,
+    .tx_count = 5
+};
+
+user_config_t user_relay_config = {
+    .channel = 0,           //freq channel
+    .modu_addr_h = 0x08,
+    .modu_addr_l = 0x23,
+    .network_id = 0x08,
+    .router_mode = ON,
+    .tx_power = TX_POWER_DBM_13,
+    .rate_mode = RADIO_RATE_2400,
+    .tx_count = 5
+};
+
+user_config_t user_host_config[5];
+user_config_t user_slave_config[5];
 /**
  * E22-900T22S 默认配置参数
  */
@@ -105,7 +147,7 @@ static const e22_register_t register_default =
 		.wake_on_radio_role    = WOR_SLAVE,
 		.listen_before_talk    = OFF,
 		.router_mode           = OFF, //relay enable
-		.specify_target        = OFF,
+		.specify_target        = ON,  ///* 指定目标传输，也叫定点模式(寄存器地址:06H Bit6)将用户串口传入数据的前三字节用来改变地址与信道 */
 		.packet_rssi           = ON,
 	},
 	.register_7 = {
@@ -122,22 +164,59 @@ static const e22_register_t register_default =
 	},
 };
 
-user_config_t user_config =
+void e22_at_defaule(void)
 {
-	.rate_mode = RADIO_RATE_2400,    // 空速模式 挡位选择
-	.channel   = 0,   // 通信信道
-	.tx_power  = TX_POWER_DBM_13,   // 发射功率 挡位选择
-	.tx_count  = 5,   // 数据发送测试总次数
-    .modu_addr_h = 0x00,
-    .modu_addr_l = 0x00,
-    .network_id = 0x08,
-};
+    e22_config_atcommand(tx_DEFAULT,strlen(tx_DEFAULT));
+}
+
+void e22_parameter_init(void)
+{
+    e22_config_atcommand(set_freq,strlen(set_freq));
+    e22_config_atcommand(set_sf9,strlen(set_sf9));
+    e22_config_atcommand(tx_RESET,strlen(tx_RESET)); //模组重启，参数生效。
+    mDelaymS(5);
+    //e22_hal_reset();
+    mDelaymS(5);
+    //e22_config_atcommand(set_checkfreq,strlen(set_checkfreq));
+}
+
+void e22_user_config_init(MODE_SET_STU mode)
+{
+    switch(mode.Mode_Type)
+    {
+        case HOST_TYPE:
+            if(mode.host_num<HOST_11 || mode.host_num>HOST_15) mode.host_num = HOST_11;
+            user_host_config[mode.host_num-11].modu_addr_h = 0x00;
+            user_host_config[mode.host_num-11].modu_addr_l = mode.host_num;
+            user_host_config[mode.host_num-11].network_id = 0x08;
+            if(mode_sel.Mode_Set == NORMAL_MODE) e22_send_userconfig(&user_host_config[mode.host_num-11]);
+            else e22_send_userconfig(&user_relay_config);
+            break;
+
+        case SLAVE_TYPE:
+            if(mode.salve_num<SLAVE_1 || mode.salve_num>SLAVE_5) mode.salve_num = SLAVE_1;
+            if(mode_sel.Mode_Set == NORMAL_MODE)
+            {
+                user_slave_config[mode.salve_num-1].modu_addr_h = 0x00;
+                user_slave_config[mode.salve_num-1].modu_addr_l = mode.salve_num;
+                user_slave_config[mode.salve_num-1].network_id = 0x08;
+            }
+            else
+            {
+                user_slave_config[mode.salve_num-1].modu_addr_h = 0x00;
+                user_slave_config[mode.salve_num-1].modu_addr_l = mode.salve_num;
+                user_slave_config[mode.salve_num-1].network_id = 0x23;
+            }
+            e22_send_userconfig(&user_slave_config[mode.salve_num-1]);
+            break;
+    }
+}
 
 void e22_hal_uart_tx(uint8_t *buffer, uint16_t length)
 {
     UART1_Send_Data(buffer,length);
     flag_led = 1;
-    time_sw = 300;
+    time_sw = 500;
     Receiver_LED_TX = 1;
 }
 
@@ -154,29 +233,174 @@ void e22_command_test(uint8_t *com,uint16_t length)
     e22_hal_uart_tx(com,length);
 }
 
-void tx_check_slave_sta(Slave_Str num_stu)
+u8 txnum = 0;
+void host_tx_check_slave_sta(MODE_SET_STU smode)
 {
-    switch(num_stu.num)
+    if(flag_tx_start)
     {
-        case 0:
-            txdata[2] = 0xF1;
-            e22_hal_uart_tx(txdata,5);
+        if(smode.enter_step < 6)
+        {
+            //e22_user_config_init(smode);
+            if(flag_tx_open || flag_tx_stop || flag_tx_close)
+            {
+                flag_tx_open = 0;
+                flag_tx_stop = 0;
+                flag_tx_close = 0;
+                e22_txdata[3] = 0xF1; //ctrl code
+            }
+            else
+            {
+                e22_txdata[3] = 0x11;
+                Display_String(28,smode.enter_step*8+10,"               ",15);
+            }
+            e22_txdata[1] = smode.enter_step;
+            e22_txdata[2] = user_host_config[smode.enter_step-1].channel; //channel
+            e22_txdata[4] = txnum;  //slave number
+            e22_hal_uart_tx(e22_txdata,sizeof(e22_txdata));
+            e22_acktime_start(smode.enter_step);
+            flag_tx_start = 0;
+            time_txcheck = 0;
+            txnum = 0;
+        }
+        else
+        {
+            if(time_txcheck == 0 && txnum < 5 && flag_check_timeout == 0)
+            {
+                time_txcheck = 1000;
+                txnum++;
+                //smode.enter_step = txnum;
+                //e22_user_config_init(smode,txnum);
+                if(flag_tx_open || flag_tx_stop || flag_tx_close)
+                {
+                    e22_txdata[3] = 0xF1;
+                }
+                else e22_txdata[3] = 0x11;
+                e22_txdata[1] = txnum;  //slave addr
+                e22_txdata[2] = user_host_config[txnum-1].channel; //channel
+                e22_txdata[4] = txnum;  //slave number
+                e22_hal_uart_tx(e22_txdata,sizeof(e22_txdata));
+                e22_acktime_start(txnum);
+                Display_String(28,txnum*8+10,"               ",15); //clear display data
+                if(txnum >= 5)
+                {
+                    txnum = 0;
+                    time_txcheck = 0;
+                    flag_tx_start = 0;
+                    flag_tx_open = 0;
+                    flag_tx_stop = 0;
+                    flag_tx_close = 0;
+                }
+            }
+        }
+    }
+    if(flag_slave_rx)
+    {
+        flag_slave_rx = 0;
+        Display_refresh(28,10,rx_slave_num);
+    }
+}
 
-            break;
+void slave_tx_sta(u8 num)
+{
+    if(flag_slave_rx && time_slave_ack == 0)
+    {
+        flag_slave_rx = 0;
+        e22_txdata[1] = mode_sel.host_num; //host addr
+        e22_txdata[2] = user_slave_config[num].channel; //tx channel
+        e22_txdata[3] = 0x11; //data head
+        e22_txdata[4] = num;  //slave number
+        if(key_sta == Key_Open) e22_txdata[5] = 0x08;
+        else if(key_sta == Key_Stop) e22_txdata[5] = 0x04;
+        else e22_txdata[5] = 0x02;
+        e22_hal_uart_tx(e22_txdata,sizeof(e22_txdata));
+    }
+}
+
+void e22_acktime_start(u8 tstep)
+{
+    flag_rx_time = 1;
+    SlaNumStu[tstep].oldtime = time_rxack;
+    step_tx_timeout = tstep;
+    flag_check_timeout = 1;
+}
+
+void e22_check_ack_timeout(void)
+{
+    if(flag_check_timeout && (time_rxack - SlaNumStu[step_tx_timeout].oldtime) > 2000)
+    {
+        flag_check_timeout = 0;
+        if(e22_txdata[3] == 0x11)
+        {
+            Display_String(28,step_tx_timeout*8+10,"               ",15);
+            Display_String(28,step_tx_timeout*8+10,"Ack Time Out",12);
+        }
     }
 }
 
 void E22_Data_Check(unsigned char *buffer,unsigned long length)
 {
-    if(buffer[1] <= 5)
+    if(mode_sel.Mode_Type == HOST_TYPE)
     {
-        SlaNumStu[buffer[1]].num = buffer[1];
-        SlaNumStu[buffer[1]].rssi = buffer[6];
-        SlaNumStu[buffer[1]].sta = buffer[2];
-        SlaNumStu[buffer[1]].acktime = time_rxack - SlaNumStu[buffer[1]].oldtime;
-        flag_slave_rx = 1;
-        rx_slave_num = SlaNumStu[buffer[1]].num;
+        if(mode_sel.Mode_Set == NORMAL_MODE && buffer[0] == 0x11 && buffer[1] <= 5)
+        {
+            flag_check_timeout = 0;
+            SlaNumStu[buffer[1]].num = buffer[1];
+            SlaNumStu[buffer[1]].rssi = buffer[5];
+            SlaNumStu[buffer[1]].sta = buffer[2];
+            SlaNumStu[buffer[1]].acktime = time_rxack - SlaNumStu[buffer[1]].oldtime;
+            flag_slave_rx = 1;
+            rx_slave_num = SlaNumStu[buffer[1]].num;
+            beep_led_on();
+        }
+        else if(mode_sel.Mode_Set == RELAY_MODE && buffer[1] == 'O' && buffer[2] == 'K')
+        {
+            beep_led_on();
+        }
     }
+    else
+    {
+        if(buffer[0]==0x11 && buffer[1] <= 5)
+        {
+            rx_slave_num = buffer[1];
+            flag_slave_rx = 1;
+            time_slave_ack = 300;
+            beep_led_on();
+        }
+        else if(buffer[0]==0xF1 && buffer[1] <= 5)
+        {
+            beep_led_on();
+            if(buffer[2] == 0x08)
+            {
+                key_sta = Key_Open;
+                Receiver_OUT_OPEN = 1;
+                Receiver_OUT_STOP = 0;
+                Receiver_OUT_CLOSE = 0;
+            }
+            else if(buffer[2] == 0x04)
+            {
+                key_sta = Key_Stop;
+                Receiver_OUT_OPEN = 0;
+                Receiver_OUT_STOP = 1;
+                Receiver_OUT_CLOSE = 0;
+            }
+            else if(buffer[2] == 0x02)
+            {
+                key_sta = Key_Close;
+                Receiver_OUT_OPEN = 0;
+                Receiver_OUT_STOP = 0;
+                Receiver_OUT_CLOSE = 1;
+            }
+        }
+    }
+}
+
+void beep_led_on(void)
+{
+    _ReqBuzzer(400,1,1);
+    Receiver_LED_RX = 1;
+    Receiver_LED_OUT = 1;
+    time_sw = 500;
+    flag_led = 1;
 }
 
 void tx_state(void)
@@ -184,20 +408,20 @@ void tx_state(void)
     if(flag_tx_stop)
     {
         flag_tx_stop = 0;
-        txdata[2] = 0x04;
-        e22_hal_uart_tx(txdata,5);
+        e22_txdata[2] = 0x04;
+        e22_hal_uart_tx(e22_txdata,5);
     }
     if(flag_tx_open)
     {
         flag_tx_open = 0;
-        txdata[2] = 0x08;
-        e22_hal_uart_tx(txdata,5);
+        e22_txdata[2] = 0x08;
+        e22_hal_uart_tx(e22_txdata,5);
     }
     if(flag_tx_close)
     {
         flag_tx_close = 0;
-        txdata[2] = 0x02;
-        e22_hal_uart_tx(txdata,5);
+        e22_txdata[2] = 0x02;
+        e22_hal_uart_tx(e22_txdata,5);
     }
 }
 
@@ -220,7 +444,7 @@ static void e22_send_config_command(const e22_register_t *config)
 	/* 串口写入 */
 	e22_hal_uart_tx( (uint8_t*)&e22_buffer, sizeof(e22_register_t) + 3);
 }
-
+u8 ch = 0;
 void e22_send_userconfig(user_config_t *config)
 {
     uint16_t opt_length;
@@ -242,7 +466,7 @@ void e22_send_userconfig(user_config_t *config)
 
 	/* 等待模组应答 */
 	uart1_wait_response_blocked( e22_buffer.opt_buffer , &opt_length );
-
+     ch = e22_buffer.opt_buffer[0];
 	/* 应答数据检查 指令头必为C1 */
 	if( e22_buffer.opt_buffer[0] != 0xC1 )
 	{
@@ -263,12 +487,14 @@ void E22_Test_Mode(void)
             flag_tx_carr = 1;
             Receiver_LED_TX = 1;
             e22_test_mode(1);
+            flag_tx_modu = 0;
         }
         else if(key_sta == Key_Close && flag_tx_modu == 0)
         {
             flag_tx_modu = 1;
             Receiver_LED_TX = 1;
             e22_test_mode(2);
+            flag_tx_carr = 0;
         }
         else if(key_sta == Key_Stop && (flag_tx_carr==1 || flag_tx_modu==1))
         {
@@ -317,7 +543,7 @@ void e22_hal_aux_wait(void)
 void e22_hal_reset(void)
 {
     E22_RST = 0;
-    mDelaymS(1);
+    mDelaymS(2);
     E22_RST = 1;
     mDelaymS(10);
     e22_hal_aux_wait();

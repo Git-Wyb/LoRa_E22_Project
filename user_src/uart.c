@@ -113,7 +113,7 @@ void uart1_rx_timeout_1ms_callback(void)
 	}
 }
 
-void uart1_wait_response_blocked( uint8_t * buffer, uint16_t *length )
+void uart1_wait_response_blocked( UINT8 * buffer, UINT16 *length )
 {
 	uint32_t fifo_rx_len = 0;
 
@@ -168,11 +168,6 @@ bool uart1_check_rx_done( unsigned char *buffer , unsigned long *length )
 		ret = true;
 
         E22_Data_Check(buffer,fifo_rx_len);
-        _ReqBuzzer(400,1,1);
-        Receiver_LED_RX = 1;
-        Receiver_LED_OUT = 1;
-        time_sw = 300;
-        flag_led = 1;
 	}
 	return ret;
 }

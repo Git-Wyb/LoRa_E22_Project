@@ -4,6 +4,7 @@
 #include "Pin_define.h"
 #include "Timer.h"
 #include "initial.h"
+#include "ram.h"
 
 
 #define uint8_t UINT8
@@ -225,6 +226,12 @@ typedef struct
     uint8_t tx_count;
 }user_config_t;
 
+extern user_config_t host_config_default;
+extern user_config_t user_slave_config[5];
+extern user_config_t slave_config_default;
+extern user_config_t user_relay_config;
+extern user_config_t user_host_config[5];
+extern u8 e22_txdata[];
 
 void e22_hal_work_mode(work_mode_t mode);
 void e22_test_mode(uint8_t mode);
@@ -232,5 +239,16 @@ void e22_hal_uart_tx(uint8_t *buffer, uint16_t length);
 void E22_Test_Mode(void);
 void tx_state(void);
 void E22_Data_Check(unsigned char *buffer,unsigned long length);
+void e22_send_userconfig(user_config_t *config);
+void e22_user_config_init(MODE_SET_STU mode);
+void e22_config_atcommand(uint8_t *config,uint16_t length);
+void e22_hal_reset(void);
+void e22_parameter_init(void);
+void e22_acktime_start(u8 tstep);
+void host_tx_check_slave_sta(MODE_SET_STU smode);
+void e22_at_defaule(void);
+void slave_tx_sta(u8 num);
+void beep_led_on(void);
+void e22_check_ack_timeout(void);
 
 #endif

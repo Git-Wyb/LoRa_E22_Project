@@ -12,6 +12,11 @@
 #include "ram.h"        // RAM定义
 #include "uart.h" // uart
 #include "Timer.h"
+#include "lcd.h"
+#include "E22-900T.h"
+#include <string.h>
+#include "display.h"
+
 uFLAG YellowLedFlag, RedLedFalg;
 
 void RAM_clean(void)
@@ -103,7 +108,7 @@ void Receiver_OUT_GPIO_Init(void)
 
     Receiver_OUT_STOP_DDR = Output; // Output   受信机继电器STOP  高电平有�?
     Receiver_OUT_STOP_CR1 = 1;
-    if(Mode_Sel == SLAVE_MODE)
+    if(mode_sel.Mode_Type == SLAVE_TYPE)
     {
         Receiver_OUT_STOP = 1;
         key_sta = Key_Stop;
@@ -153,6 +158,10 @@ void KEY_GPIO_Init(void)
     PIN_TEST_CR1 = Pull_up;
     PIN_TEST_CR2 = InterruptDisable;
 
+    SelDev_Mode_DDR = Input;
+    SelDev_Mode_CR1 = Floating;
+    SelDev_Mode_CR2 = InterruptDisable;
+
     KEY_UP_DDR = Input;            // 输入     test�?
     KEY_UP_CR1 = Pull_up;          //1: Input with pull-up 0: Floating input
     KEY_UP_CR2 = InterruptDisable; //禁止中断
@@ -165,7 +174,7 @@ void KEY_GPIO_Init(void)
     KEY_ENTER_CR1 = Pull_up;          //1: Input with pull-up 0: Floating input
     KEY_ENTER_CR2 = InterruptDisable; //禁止中断
 
-    if(Mode_Sel == SLAVE_MODE)
+    if(mode_sel.Mode_Type == SLAVE_TYPE)
     {
         KEY_OPEN_DDR = Input;            // 输入     test�?
         KEY_OPEN_CR1 = Floating;//Pull_up;          //1: Input with pull-up 0: Floating input
@@ -215,6 +224,22 @@ void E22_GPIO_Init(void)
     E22_M1 = 0; //mode 0
 }
 
+void user_mode_init(void)
+{
+    u8 si = 0;
+    if(SelDev_ModeIN)
+        mode_sel.Mode_Set = NORMAL_MODE;
+    else
+        mode_sel.Mode_Set = RELAY_MODE;
+
+    for(si=0; si<5; si++)
+    {
+        memcpy(&user_host_config[si],&host_config_default,sizeof(user_config_t));
+        memcpy(&user_slave_config[si],&slave_config_default,sizeof(user_config_t));
+    }
+}
+
+
 u8 key_ms = 0;
 void key_1ms_scan_host(void)
 {
@@ -260,9 +285,9 @@ void key_1ms_scan_slave(void)
                 if(key_ms > 50)  //ms
                 {
                     key_ms = 0;
-                    if(KEY_STOP_IN == 1 && flag_tx_stop == 0)
+                    if(KEY_STOP_IN == 1)// && flag_tx_stop == 0)
                     {
-                        flag_tx_stop = 1;
+                        //flag_tx_stop = 1;
                         key_sta = Key_Stop;
                         Receiver_OUT_OPEN = 0;
                         Receiver_OUT_STOP = 1;
@@ -276,9 +301,9 @@ void key_1ms_scan_slave(void)
                 if(key_ms > 50)  //ms
                 {
                     key_ms = 0;
-                    if(KEY_CLOSE_IN == 1 && flag_tx_close == 0)
+                    if(KEY_CLOSE_IN == 1)// && flag_tx_close == 0)
                     {
-                        flag_tx_close = 1;
+                        //flag_tx_close = 1;
                         key_sta = Key_Close;
                         Receiver_OUT_OPEN = 0;
                         Receiver_OUT_STOP = 0;
@@ -296,9 +321,9 @@ void key_1ms_scan_slave(void)
                 if(key_ms > 50)  //ms
                 {
                     key_ms = 0;
-                    if(KEY_OPEN_IN == 1 && flag_tx_open == 0)
+                    if(KEY_OPEN_IN == 1)// && flag_tx_open == 0)
                     {
-                        flag_tx_open = 1;
+                        //flag_tx_open = 1;
                         key_sta = Key_Open;
                         Receiver_OUT_OPEN = 1;
                         Receiver_OUT_STOP = 0;
@@ -312,9 +337,9 @@ void key_1ms_scan_slave(void)
                 if(key_ms > 50)  //ms
                 {
                     key_ms = 0;
-                    if(KEY_CLOSE_IN == 1 && flag_tx_close == 0)
+                    if(KEY_CLOSE_IN == 1)// && flag_tx_close == 0)
                     {
-                        flag_tx_close = 1;
+                        //flag_tx_close = 1;
                         key_sta = Key_Close;
                         Receiver_OUT_OPEN = 0;
                         Receiver_OUT_STOP = 0;
@@ -332,9 +357,9 @@ void key_1ms_scan_slave(void)
                 if(key_ms > 50)  //ms
                 {
                     key_ms = 0;
-                    if(KEY_OPEN_IN == 1 && flag_tx_open == 0)
+                    if(KEY_OPEN_IN == 1)// && flag_tx_open == 0)
                     {
-                        flag_tx_open = 1;
+                        //flag_tx_open = 1;
                         key_sta = Key_Open;
                         Receiver_OUT_OPEN = 1;
                         Receiver_OUT_STOP = 0;
@@ -348,9 +373,9 @@ void key_1ms_scan_slave(void)
                 if(key_ms > 50)  //ms
                 {
                     key_ms = 0;
-                    if(KEY_STOP_IN == 1 && flag_tx_stop == 0)
+                    if(KEY_STOP_IN == 1)// && flag_tx_stop == 0)
                     {
-                        flag_tx_stop = 1;
+                        //flag_tx_stop = 1;
                         key_sta = Key_Stop;
                         Receiver_OUT_OPEN = 0;
                         Receiver_OUT_STOP = 1;
