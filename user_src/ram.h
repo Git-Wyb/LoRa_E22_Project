@@ -338,8 +338,8 @@ typedef struct{
      MODE_TYPE_ENUM Mode_Type;
      MODE_SET_ENUM  Mode_Set;
      u8 enter_step;
-     HOST_SEL host_num;  //11-14
-     SLAVE_SEL salve_num; //1-10
+     HOST_SEL host_id;  //11-14
+     SLAVE_SEL salve_id; //1-10
 }MODE_SET_STU;
 
 extern Wireless_Body Struct_DATA_Packet_Contro,Struct_DATA_Packet_Contro_buf;
@@ -390,12 +390,13 @@ extern u8 key_sta;
 extern u8 Mode_Sel;
 extern u16 time_txcheck;
 extern u32 time_rxack;
-extern u8 rx_slave_num;
+extern u8 rx_slave_id;
 extern u16 time_step;
 extern MODE_SET_STU mode_sel;
 extern u8 key_step;
 extern u8 Slave_Num;
 extern u8 step_tx_timeout;
 extern u16 time_slave_ack;
+extern u8 slave_rx_hostid;
 
 #endif

@@ -77,7 +77,10 @@ static uint8_t tx_DEFAULT[] = "AT+DEFAULT";
 /*模组重启*/
 static uint8_t tx_RESET[] = "AT+RESET";
 
-u8 e22_txdata[] = {0x00,0x00,0x00,0x11,0x12,0x13,0x14,0x15};
+/* HOST TX: SlaveIDaddrH, SlaveIDaddrL, FreqChannel, set/check State, HostID, State, endCode */
+u8 e22_txdata[] = {0x00,0x00,0x00,0x11,0x00,0x00,0x15};
+/* SLAVE TX: addrH, addrL, FreqChannel, DataHead, SlaveID, State, endCode */
+
 
 user_config_t host_config_default = {
     .channel = 0,           //freq channel
@@ -185,29 +188,29 @@ void e22_user_config_init(MODE_SET_STU mode)
     switch(mode.Mode_Type)
     {
         case HOST_TYPE:
-            if(mode.host_num<HOST_11 || mode.host_num>HOST_15) mode.host_num = HOST_11;
-            user_host_config[mode.host_num-11].modu_addr_h = 0x00;
-            user_host_config[mode.host_num-11].modu_addr_l = mode.host_num;
-            user_host_config[mode.host_num-11].network_id = 0x08;
-            if(mode_sel.Mode_Set == NORMAL_MODE) e22_send_userconfig(&user_host_config[mode.host_num-11]);
+            if(mode.host_id<HOST_11 || mode.host_id>HOST_15) mode.host_id = HOST_11;
+            user_host_config[mode.host_id-11].modu_addr_h = 0x00;
+            user_host_config[mode.host_id-11].modu_addr_l = mode.host_id;
+            user_host_config[mode.host_id-11].network_id = 0x08;
+            if(mode_sel.Mode_Set == NORMAL_MODE) e22_send_userconfig(&user_host_config[mode.host_id-11]);
             else e22_send_userconfig(&user_relay_config);
             break;
 
         case SLAVE_TYPE:
-            if(mode.salve_num<SLAVE_1 || mode.salve_num>SLAVE_5) mode.salve_num = SLAVE_1;
+            if(mode.salve_id<SLAVE_1 || mode.salve_id>SLAVE_5) mode.salve_id = SLAVE_1;
             if(mode_sel.Mode_Set == NORMAL_MODE)
             {
-                user_slave_config[mode.salve_num-1].modu_addr_h = 0x00;
-                user_slave_config[mode.salve_num-1].modu_addr_l = mode.salve_num;
-                user_slave_config[mode.salve_num-1].network_id = 0x08;
+                user_slave_config[mode.salve_id-1].modu_addr_h = 0x00;
+                user_slave_config[mode.salve_id-1].modu_addr_l = mode.salve_id;
+                user_slave_config[mode.salve_id-1].network_id = 0x08;
             }
             else
             {
-                user_slave_config[mode.salve_num-1].modu_addr_h = 0x00;
-                user_slave_config[mode.salve_num-1].modu_addr_l = mode.salve_num;
-                user_slave_config[mode.salve_num-1].network_id = 0x23;
+                user_slave_config[mode.salve_id-1].modu_addr_h = 0x00;
+                user_slave_config[mode.salve_id-1].modu_addr_l = mode.salve_id;
+                user_slave_config[mode.salve_id-1].network_id = 0x23;
             }
-            e22_send_userconfig(&user_slave_config[mode.salve_num-1]);
+            e22_send_userconfig(&user_slave_config[mode.salve_id-1]);
             break;
     }
 }
@@ -246,16 +249,17 @@ void host_tx_check_slave_sta(MODE_SET_STU smode)
                 flag_tx_open = 0;
                 flag_tx_stop = 0;
                 flag_tx_close = 0;
-                e22_txdata[3] = 0xF1; //ctrl code
+                e22_txdata[3] = 0xF1; //ctrl SET code
             }
             else
             {
                 e22_txdata[3] = 0x11;
                 Display_String(28,smode.enter_step*8+10,"               ",15);
             }
+            /* HOST TX: SlaveIDaddrH, SlaveIDaddrL, FreqChannel, set/check State, HostID, State */
             e22_txdata[1] = smode.enter_step;
             e22_txdata[2] = user_host_config[smode.enter_step-1].channel; //channel
-            e22_txdata[4] = txnum;  //slave number
+            e22_txdata[4] = smode.host_id;  //Host ID
             e22_hal_uart_tx(e22_txdata,sizeof(e22_txdata));
             e22_acktime_start(smode.enter_step);
             flag_tx_start = 0;
@@ -277,7 +281,7 @@ void host_tx_check_slave_sta(MODE_SET_STU smode)
                 else e22_txdata[3] = 0x11;
                 e22_txdata[1] = txnum;  //slave addr
                 e22_txdata[2] = user_host_config[txnum-1].channel; //channel
-                e22_txdata[4] = txnum;  //slave number
+                e22_txdata[4] = smode.host_id;  //slave number
                 e22_hal_uart_tx(e22_txdata,sizeof(e22_txdata));
                 e22_acktime_start(txnum);
                 Display_String(28,txnum*8+10,"               ",15); //clear display data
@@ -296,23 +300,28 @@ void host_tx_check_slave_sta(MODE_SET_STU smode)
     if(flag_slave_rx)
     {
         flag_slave_rx = 0;
-        Display_refresh(28,10,rx_slave_num);
+        Display_refresh(28,10,rx_slave_id);
     }
 }
 
 void slave_tx_sta(u8 num)
 {
-    if(flag_slave_rx && time_slave_ack == 0)
+    if(flag_slave_rx)
     {
-        flag_slave_rx = 0;
-        e22_txdata[1] = mode_sel.host_num; //host addr
-        e22_txdata[2] = user_slave_config[num].channel; //tx channel
-        e22_txdata[3] = 0x11; //data head
-        e22_txdata[4] = num;  //slave number
-        if(key_sta == Key_Open) e22_txdata[5] = 0x08;
-        else if(key_sta == Key_Stop) e22_txdata[5] = 0x04;
-        else e22_txdata[5] = 0x02;
-        e22_hal_uart_tx(e22_txdata,sizeof(e22_txdata));
+        if(mode_sel.Mode_Set == NORMAL_MODE && time_slave_ack != 0) //一般模式需要延时300ms发送,中继模式不需要延时。
+        {}
+        else
+        {
+            flag_slave_rx = 0;
+            e22_txdata[1] = slave_rx_hostid; //host addr
+            e22_txdata[2] = user_slave_config[num].channel; //tx channel
+            e22_txdata[3] = 0x11; //data head
+            e22_txdata[4] = num;  //slave id
+            if(key_sta == Key_Open) e22_txdata[5] = 0x08;
+            else if(key_sta == Key_Stop) e22_txdata[5] = 0x04;
+            else e22_txdata[5] = 0x02;
+            e22_hal_uart_tx(e22_txdata,sizeof(e22_txdata));
+        }
     }
 }
 
@@ -332,7 +341,7 @@ void e22_check_ack_timeout(void)
         if(e22_txdata[3] == 0x11)
         {
             Display_String(28,step_tx_timeout*8+10,"               ",15);
-            Display_String(28,step_tx_timeout*8+10,"Ack Time Out",12);
+            Display_String(28+6*7,step_tx_timeout*8+10,"Time Out",8);
         }
     }
 }
@@ -345,29 +354,30 @@ void E22_Data_Check(unsigned char *buffer,unsigned long length)
         {
             flag_check_timeout = 0;
             SlaNumStu[buffer[1]].num = buffer[1];
-            SlaNumStu[buffer[1]].rssi = buffer[5];
+            SlaNumStu[buffer[1]].rssi = buffer[4];
             SlaNumStu[buffer[1]].sta = buffer[2];
             SlaNumStu[buffer[1]].acktime = time_rxack - SlaNumStu[buffer[1]].oldtime;
             flag_slave_rx = 1;
-            rx_slave_num = SlaNumStu[buffer[1]].num;
+            rx_slave_id = SlaNumStu[buffer[1]].num;
             beep_led_on();
         }
         else if(mode_sel.Mode_Set == RELAY_MODE && buffer[1] == 'O' && buffer[2] == 'K')
         {
-            beep_led_on();
+            //beep_led_on();
         }
     }
     else
     {
-        if(buffer[0]==0x11 && buffer[1] <= 5)
+        if(buffer[0] == 0x11)
         {
-            rx_slave_num = buffer[1];
+            slave_rx_hostid = buffer[1];
             flag_slave_rx = 1;
             time_slave_ack = 300;
             beep_led_on();
         }
-        else if(buffer[0]==0xF1 && buffer[1] <= 5)
+        else if(buffer[0] == 0xF1)
         {
+            slave_rx_hostid = buffer[1];
             beep_led_on();
             if(buffer[2] == 0x08)
             {
