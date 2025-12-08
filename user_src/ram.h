@@ -398,5 +398,7 @@ extern u8 Slave_Num;
 extern u8 step_tx_timeout;
 extern u16 time_slave_ack;
 extern u8 slave_rx_hostid;
+extern u8 key_last_step;
+extern u8 slave_rx_rssi;
 
 #endif

@@ -4,7 +4,8 @@
 #include "E22-900T.h"
 
 u8 m_x = 0;
-u8 m_y = 10;
+u8 m_y = 0;
+u8 ycoe = 8;
 u8 host_buf[] = {"[LoRa Host Mode]"};
 u8 relay_buf[] = {"[LoRa Relay Mode]"};
 Slave_Str sla_stu = {0};
@@ -12,7 +13,7 @@ Slave_Str SlaNumStu[6];
 u8 charbuf[25];
 char *strbuf[] = {"OPEN ","STOP ","CLOSE"};
 char *sfreq[] = {"F:922.2","F:922.4","F:922.6","F:922.8","F:923.0","F:923.2"};
-u8 str_sta[] = {"No. State RSSI Ms "};
+u8 str_sta[] = {"No. State RSSI MS "};
 /*
 display_freq(0,8,922200000);
 FreqToString(sbuff,429.175,"MHz");
@@ -23,14 +24,14 @@ void menu_start(void)
 {
     if(mode_sel.Mode_Set == NORMAL_MODE)
     {
-        Display_String(0,0,host_buf,strlen(host_buf));
-        Display_String(0,10,str_sta,strlen(str_sta));
-        Display_String(14,m_y+1*8,"1",1);
-        Display_String(14,m_y+2*8,"2",1);
-        Display_String(14,m_y+3*8,"3",1);
-        Display_String(14,m_y+4*8,"4",1);
-        Display_String(14,m_y+5*8,"5",1);
-        Display_String(14,m_y+6*8,"Check All",9);
+        //Display_String(0,0,host_buf,strlen(host_buf));
+        Display_String(0,m_y,str_sta,strlen(str_sta));
+        Display_String(14,m_y+1*ycoe,"1",1);
+        Display_String(14,m_y+2*ycoe,"2",1);
+        Display_String(14,m_y+3*ycoe,"3",1);
+        Display_String(14,m_y+4*ycoe,"4",1);
+        Display_String(14,m_y+5*ycoe,"5",1);
+        Display_String(14,m_y+6*ycoe,"Check All",9);
     }
     else Display_String(0,0,relay_buf,strlen(relay_buf));
     /*
@@ -56,13 +57,18 @@ void Display_refresh(u8 x,u8 y,u8 snum)
     else if(SlaNumStu[snum].sta == 0x02) n = 2;
 
     memset(charbuf,0,sizeof(charbuf));
-    snprintf(charbuf,20,"%s -%d ",strbuf[n],(256-SlaNumStu[snum].rssi));
-    Display_String(x,snum*8+y,"               ",15);
-    Display_String(x,snum*8+y,charbuf,strlen(charbuf));
+    snprintf(charbuf,20,"%s -%d ",strbuf[n],(256-SlaNumStu[snum].slave_rssi));
+    Display_String(x,snum*ycoe+y,"               ",15);
+    Display_String(x,snum*ycoe+y,charbuf,strlen(charbuf));
 
     memset(charbuf,0,sizeof(charbuf));
     snprintf(charbuf,20,"%ld",SlaNumStu[snum].acktime);
-    Display_String(x+11*7,snum*8+y,charbuf,strlen(charbuf));
+    Display_String(x+11*7,snum*ycoe+y,charbuf,strlen(charbuf));
+
+    memset(charbuf,0,sizeof(charbuf));
+    snprintf(charbuf,20,"-%ddBm",(256-SlaNumStu[snum].rssi));
+    Display_String(14,7*ycoe+y,"               ",15);
+    Display_String(14,7*ycoe+y,charbuf,strlen(charbuf));
 }
 
 void check_key_sta(void)
@@ -72,6 +78,7 @@ void check_key_sta(void)
         case Key_Up:
             if(key_step>1) key_step--;
             else key_step = 6;
+            mode_sel.enter_step = key_step;
             flag_key_enter = 0;
             flag_step = 0;
             key_sta = Key_None;
@@ -80,6 +87,7 @@ void check_key_sta(void)
         case Key_Down:
             if(key_step<6) key_step++;
             else key_step = 1;
+            mode_sel.enter_step = key_step;
             flag_key_enter = 0;
             flag_step = 0;
             key_sta = Key_None;
@@ -93,7 +101,7 @@ void check_key_sta(void)
             break;
 
         case Key_Open:
-            if(flag_key_enter)
+            //if(flag_key_enter)
             {
                 e22_txdata[5] = 0x08;
                 flag_tx_start = 1;
@@ -105,7 +113,7 @@ void check_key_sta(void)
             break;
 
         case Key_Stop:
-            if(flag_key_enter)
+            //if(flag_key_enter)
             {
                 e22_txdata[5] = 0x04;
                 flag_tx_start = 1;
@@ -117,7 +125,7 @@ void check_key_sta(void)
             break;
 
         case Key_Close:
-            if(flag_key_enter)
+            //if(flag_key_enter)
             {
                 e22_txdata[5] = 0x02;
                 flag_tx_start = 1;
@@ -129,7 +137,13 @@ void check_key_sta(void)
             break;
 
         case Key_None:
-            display_step(key_step);
+            if(key_last_step != key_step)
+            {
+                key_last_step = key_step;
+                //display_step(key_step);
+                clear_step();
+                Display_String(0,key_step*ycoe+m_y,"*",2);
+            }
             break;
     }
 }
@@ -141,7 +155,7 @@ void display_step(u8 step)
     {
         flag_step = 1;
         clear_step();
-        Display_String(0,key_step*8+m_y,"*",2);
+        Display_String(0,key_step*ycoe+m_y,"*",2);
         clear_data(step);
     }
     else if(flag_step == 0)
@@ -158,7 +172,7 @@ void display_step(u8 step)
             {
                 dis_num = 0;
                 clear_step();
-                Display_String(0,key_step*8+m_y,"=>",2);
+                Display_String(0,key_step*ycoe+m_y,"=>",2);
             }
         }
     }
@@ -168,7 +182,7 @@ void clear_step(void)
 {
     u8 i = 0;
     for(i=1; i<7; i++)
-        Display_String(0,i*8+10,"  ",2);
+        Display_String(0,i*ycoe+m_y,"  ",2);
 }
 
 void clear_data(u8 step)
@@ -177,10 +191,10 @@ void clear_data(u8 step)
     if(step == 6)
     {
         for(i=1; i<6; i++)
-            Display_String(m_x+28,i*8+10,"               ",15);
+            Display_String(m_x+28,i*ycoe+m_y,"               ",15);
     }
     else
-        Display_String(m_x+28,step*8+10,"               ",15);
+        Display_String(m_x+28,step*ycoe+m_y,"               ",15);
 }
 
 void Display_String(u8 x,u8 y,u8 *str,u8 len)

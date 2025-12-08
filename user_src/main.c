@@ -40,6 +40,7 @@ void main(void)
     mode_sel.Mode_Type = HOST_TYPE;//SLAVE_TYPE;HOST_TYPE
     mode_sel.host_id = HOST_11;
     mode_sel.salve_id = SLAVE_1;
+    mode_sel.enter_step = 1;
 
     _DI();             // 关全�?中断
     RAM_clean();       // 清除RAM

@@ -7,6 +7,7 @@
 typedef struct{
     u8 num;
     u8 sta;
+    u8 slave_rssi;
     u8 rssi;
     u32 acktime;
     u32 oldtime;
@@ -22,9 +23,10 @@ void menu_creat(u8 *name,u8 len);
 
 extern Slave_Str sla_stu;
 extern Slave_Str SlaNumStu[6];
-extern u8 e22_txdata[];
 void Display_refresh(u8 x,u8 y,u8 snum);
 void display_step(u8 step);
 void clear_data(u8 step);
+extern u8 ycoe;
+extern u8 m_y;
 
 #endif

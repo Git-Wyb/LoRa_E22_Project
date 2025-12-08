@@ -220,8 +220,10 @@ u8 key_sta = Key_None;
 MODE_SET_STU mode_sel = {0};//SLAVE_MODE ,HOST_MODE
 u8 rx_slave_id = 0;
 u8 key_step = 1;
+u8 key_last_step = 0;
 u8 Slave_Num = 1;
 u8 step_tx_timeout = 0;
 u16 time_slave_ack = 0;
 u8 slave_rx_hostid = 14;
+u8 slave_rx_rssi = 0;
 

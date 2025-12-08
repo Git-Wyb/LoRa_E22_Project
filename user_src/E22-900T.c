@@ -79,7 +79,7 @@ static uint8_t tx_RESET[] = "AT+RESET";
 
 /* HOST TX: SlaveIDaddrH, SlaveIDaddrL, FreqChannel, set/check State, HostID, State, endCode */
 u8 e22_txdata[] = {0x00,0x00,0x00,0x11,0x00,0x00,0x15};
-/* SLAVE TX: addrH, addrL, FreqChannel, DataHead, SlaveID, State, endCode */
+/* SLAVE TX: addrH, addrL, FreqChannel, DataHead, SlaveID, State, slave_rssi */
 
 
 user_config_t host_config_default = {
@@ -254,7 +254,7 @@ void host_tx_check_slave_sta(MODE_SET_STU smode)
             else
             {
                 e22_txdata[3] = 0x11;
-                Display_String(28,smode.enter_step*8+10,"               ",15);
+                Display_String(28,smode.enter_step*ycoe+m_y,"               ",15);
             }
             /* HOST TX: SlaveIDaddrH, SlaveIDaddrL, FreqChannel, set/check State, HostID, State */
             e22_txdata[1] = smode.enter_step;
@@ -270,7 +270,7 @@ void host_tx_check_slave_sta(MODE_SET_STU smode)
         {
             if(time_txcheck == 0 && txnum < 5 && flag_check_timeout == 0)
             {
-                time_txcheck = 1000;
+                time_txcheck = E22_ACK_TIMEOUT + 500;
                 txnum++;
                 //smode.enter_step = txnum;
                 //e22_user_config_init(smode,txnum);
@@ -284,7 +284,7 @@ void host_tx_check_slave_sta(MODE_SET_STU smode)
                 e22_txdata[4] = smode.host_id;  //slave number
                 e22_hal_uart_tx(e22_txdata,sizeof(e22_txdata));
                 e22_acktime_start(txnum);
-                Display_String(28,txnum*8+10,"               ",15); //clear display data
+                Display_String(28,txnum*ycoe+m_y,"               ",15); //clear display data
                 if(txnum >= 5)
                 {
                     txnum = 0;
@@ -300,7 +300,7 @@ void host_tx_check_slave_sta(MODE_SET_STU smode)
     if(flag_slave_rx)
     {
         flag_slave_rx = 0;
-        Display_refresh(28,10,rx_slave_id);
+        Display_refresh(28,m_y,rx_slave_id);
     }
 }
 
@@ -320,6 +320,7 @@ void slave_tx_sta(u8 num)
             if(key_sta == Key_Open) e22_txdata[5] = 0x08;
             else if(key_sta == Key_Stop) e22_txdata[5] = 0x04;
             else e22_txdata[5] = 0x02;
+            e22_txdata[6] = slave_rx_rssi;
             e22_hal_uart_tx(e22_txdata,sizeof(e22_txdata));
         }
     }
@@ -335,13 +336,13 @@ void e22_acktime_start(u8 tstep)
 
 void e22_check_ack_timeout(void)
 {
-    if(flag_check_timeout && (time_rxack - SlaNumStu[step_tx_timeout].oldtime) > 2000)
+    if(flag_check_timeout && (time_rxack - SlaNumStu[step_tx_timeout].oldtime) > E22_ACK_TIMEOUT)
     {
         flag_check_timeout = 0;
         if(e22_txdata[3] == 0x11)
         {
-            Display_String(28,step_tx_timeout*8+10,"               ",15);
-            Display_String(28+6*7,step_tx_timeout*8+10,"Time Out",8);
+            Display_String(28,step_tx_timeout*ycoe+m_y,"               ",15);
+            Display_String(28+6*7,step_tx_timeout*ycoe+m_y,"Time Out",8);
         }
     }
 }
@@ -354,8 +355,9 @@ void E22_Data_Check(unsigned char *buffer,unsigned long length)
         {
             flag_check_timeout = 0;
             SlaNumStu[buffer[1]].num = buffer[1];
-            SlaNumStu[buffer[1]].rssi = buffer[4];
             SlaNumStu[buffer[1]].sta = buffer[2];
+            SlaNumStu[buffer[1]].slave_rssi = buffer[3];
+            SlaNumStu[buffer[1]].rssi = buffer[4];
             SlaNumStu[buffer[1]].acktime = time_rxack - SlaNumStu[buffer[1]].oldtime;
             flag_slave_rx = 1;
             rx_slave_id = SlaNumStu[buffer[1]].num;
@@ -371,6 +373,7 @@ void E22_Data_Check(unsigned char *buffer,unsigned long length)
         if(buffer[0] == 0x11)
         {
             slave_rx_hostid = buffer[1];
+            slave_rx_rssi = buffer[4];
             flag_slave_rx = 1;
             time_slave_ack = 300;
             beep_led_on();

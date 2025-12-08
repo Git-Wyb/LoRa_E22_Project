@@ -10,6 +10,8 @@
 #define uint8_t UINT8
 #define uint16_t UINT16
 
+#define E22_ACK_TIMEOUT 2000
+
 typedef enum
 {
 	WORK_MODE_TRANSPARENT   = 0x00,
@@ -225,6 +227,13 @@ typedef struct
     radio_rate_t rate_mode;
     uint8_t tx_count;
 }user_config_t;
+
+typedef struct
+{
+    u8 data_head;
+    u8 data_id;
+
+}Data_STU;
 
 extern user_config_t host_config_default;
 extern user_config_t user_slave_config[5];
