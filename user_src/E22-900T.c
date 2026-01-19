@@ -78,7 +78,16 @@ static uint8_t tx_DEFAULT[] = "AT+DEFAULT";
 static uint8_t tx_RESET[] = "AT+RESET";
 
 /* HOST TX: SlaveIDaddrH, SlaveIDaddrL, FreqChannel, set/check State, HostID, State, endCode */
-u8 e22_txdata[] = {0x00,0x00,0x00,0x11,0x00,0x00,0x15};
+u8 e22_txdata[100] = {0x00,0x00,0x00,0x11,0x00,0x00,0x15,0x15,0x15,0x15,
+                   0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,
+                   0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,
+                   0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,
+                   0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,
+                   0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,
+                   0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,
+                   0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,
+                   0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,
+                   0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15,0x15};
 /* SLAVE TX: addrH, addrL, FreqChannel, DataHead, SlaveID, State, slave_rssi */
 
 
@@ -254,7 +263,7 @@ void host_tx_check_slave_sta(MODE_SET_STU smode)
             else
             {
                 e22_txdata[3] = 0x11;
-                Display_String(28,smode.enter_step*ycoe+m_y,"               ",15);
+                Display_String(start_x+7*2,smode.enter_step*ycoe+m_y,"               ",15);
             }
             /* HOST TX: SlaveIDaddrH, SlaveIDaddrL, FreqChannel, set/check State, HostID, State */
             e22_txdata[1] = smode.enter_step;
@@ -284,7 +293,7 @@ void host_tx_check_slave_sta(MODE_SET_STU smode)
                 e22_txdata[4] = smode.host_id;  //slave number
                 e22_hal_uart_tx(e22_txdata,sizeof(e22_txdata));
                 e22_acktime_start(txnum);
-                Display_String(28,txnum*ycoe+m_y,"               ",15); //clear display data
+                Display_String(start_x+7*2,txnum*ycoe+m_y,"               ",15); //clear display data
                 if(txnum >= 5)
                 {
                     txnum = 0;
@@ -300,7 +309,7 @@ void host_tx_check_slave_sta(MODE_SET_STU smode)
     if(flag_slave_rx)
     {
         flag_slave_rx = 0;
-        Display_refresh(28,m_y,rx_slave_id);
+        Display_refresh(start_x+7*2,m_y,rx_slave_id);
     }
 }
 
@@ -321,7 +330,7 @@ void slave_tx_sta(u8 num)
             else if(key_sta == Key_Stop) e22_txdata[5] = 0x04;
             else e22_txdata[5] = 0x02;
             e22_txdata[6] = slave_rx_rssi;
-            e22_hal_uart_tx(e22_txdata,sizeof(e22_txdata));
+            e22_hal_uart_tx(e22_txdata,7);
         }
     }
 }
@@ -341,8 +350,8 @@ void e22_check_ack_timeout(void)
         flag_check_timeout = 0;
         if(e22_txdata[3] == 0x11)
         {
-            Display_String(28,step_tx_timeout*ycoe+m_y,"               ",15);
-            Display_String(28+6*7,step_tx_timeout*ycoe+m_y,"Time Out",8);
+            Display_String(start_x+7*2,step_tx_timeout*ycoe+m_y,"               ",15);
+            Display_String(start_x+7*2+6*7,step_tx_timeout*ycoe+m_y,"Time Out",8);
         }
     }
 }
@@ -373,9 +382,9 @@ void E22_Data_Check(unsigned char *buffer,unsigned long length)
         if(buffer[0] == 0x11)
         {
             slave_rx_hostid = buffer[1];
-            slave_rx_rssi = buffer[4];
+            slave_rx_rssi = buffer[sizeof(e22_txdata) - 3];
             flag_slave_rx = 1;
-            time_slave_ack = 300;
+            time_slave_ack = 600;    //NORMAL_MODE:slave delay ack to prevent conflicts with relays.RELAY_MODE:no delay.
             beep_led_on();
         }
         else if(buffer[0] == 0xF1)

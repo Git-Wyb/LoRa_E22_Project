@@ -10,7 +10,7 @@
 #define uint8_t UINT8
 #define uint16_t UINT16
 
-#define E22_ACK_TIMEOUT 2000
+#define E22_ACK_TIMEOUT 3000
 
 typedef enum
 {

@@ -28,5 +28,6 @@ void display_step(u8 step);
 void clear_data(u8 step);
 extern u8 ycoe;
 extern u8 m_y;
+extern u8 start_x;
 
 #endif

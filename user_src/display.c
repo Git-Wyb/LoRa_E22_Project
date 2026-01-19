@@ -5,6 +5,7 @@
 
 u8 m_x = 0;
 u8 m_y = 0;
+u8 start_x = 7;
 u8 ycoe = 8;
 u8 host_buf[] = {"[LoRa Host Mode]"};
 u8 relay_buf[] = {"[LoRa Relay Mode]"};
@@ -13,7 +14,7 @@ Slave_Str SlaNumStu[6];
 u8 charbuf[25];
 char *strbuf[] = {"OPEN ","STOP ","CLOSE"};
 char *sfreq[] = {"F:922.2","F:922.4","F:922.6","F:922.8","F:923.0","F:923.2"};
-u8 str_sta[] = {"No. State RSSI MS "};
+u8 str_sta[] = {"No State RSSI MS "};
 /*
 display_freq(0,8,922200000);
 FreqToString(sbuff,429.175,"MHz");
@@ -26,12 +27,12 @@ void menu_start(void)
     {
         //Display_String(0,0,host_buf,strlen(host_buf));
         Display_String(0,m_y,str_sta,strlen(str_sta));
-        Display_String(14,m_y+1*ycoe,"1",1);
-        Display_String(14,m_y+2*ycoe,"2",1);
-        Display_String(14,m_y+3*ycoe,"3",1);
-        Display_String(14,m_y+4*ycoe,"4",1);
-        Display_String(14,m_y+5*ycoe,"5",1);
-        Display_String(14,m_y+6*ycoe,"Check All",9);
+        Display_String(start_x,m_y+1*ycoe,"1",1);
+        Display_String(start_x,m_y+2*ycoe,"2",1);
+        Display_String(start_x,m_y+3*ycoe,"3",1);
+        Display_String(start_x,m_y+4*ycoe,"4",1);
+        Display_String(start_x,m_y+5*ycoe,"5",1);
+        Display_String(start_x,m_y+6*ycoe,"Check All",9);
     }
     else Display_String(0,0,relay_buf,strlen(relay_buf));
     /*
@@ -67,8 +68,8 @@ void Display_refresh(u8 x,u8 y,u8 snum)
 
     memset(charbuf,0,sizeof(charbuf));
     snprintf(charbuf,20,"-%ddBm",(256-SlaNumStu[snum].rssi));
-    Display_String(14,7*ycoe+y,"               ",15);
-    Display_String(14,7*ycoe+y,charbuf,strlen(charbuf));
+    Display_String(start_x,7*ycoe+y,"        ",8);
+    Display_String(start_x,7*ycoe+y,charbuf,strlen(charbuf));
 }
 
 void check_key_sta(void)
@@ -142,7 +143,7 @@ void check_key_sta(void)
                 key_last_step = key_step;
                 //display_step(key_step);
                 clear_step();
-                Display_String(0,key_step*ycoe+m_y,"*",2);
+                Display_String(0,key_step*ycoe+m_y,"*",1);
             }
             break;
     }
@@ -182,7 +183,7 @@ void clear_step(void)
 {
     u8 i = 0;
     for(i=1; i<7; i++)
-        Display_String(0,i*ycoe+m_y,"  ",2);
+        Display_String(0,i*ycoe+m_y," ",1);
 }
 
 void clear_data(u8 step)
