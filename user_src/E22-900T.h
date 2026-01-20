@@ -10,7 +10,7 @@
 #define uint8_t UINT8
 #define uint16_t UINT16
 
-#define E22_ACK_TIMEOUT 3000
+#define E22_ACK_TIMEOUT 2000
 
 typedef enum
 {
@@ -259,5 +259,6 @@ void e22_at_defaule(void);
 void slave_tx_sta(u8 num);
 void beep_led_on(void);
 void e22_check_ack_timeout(void);
+void host_tx_packge(MODE_SET_STU smode,u8 packnum);
 
 #endif

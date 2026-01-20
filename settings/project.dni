@@ -1,6 +1,6 @@
 [DebugChecksum]
 <<<<<<< HEAD
-Checksum=-922925847
+Checksum=281804624
 =======
 Checksum=773928336
 >>>>>>> f03119bb9d9418453f7da9e2e3549a267f3e0d0b
@@ -91,11 +91,13 @@ Fmt9=uFLAG-BYTE	4	0
 [array_types]
 Fmt0=u32_t[6]	4	0
 Fmt1=u32_t[7]	4	0
-Fmt2=u8_t[55]	3	0
-Fmt3=unsigned char[3]	4	0
-Fmt4=unsigned char[4]	4	0
-Fmt5=unsigned char[7]	3	0
-Fmt6=unsigned char[9]	4	0
+Fmt2=u8_t[1024]	4	0
+Fmt3=u8_t[55]	3	0
+Fmt4=unsigned char[1024]	4	0
+Fmt5=unsigned char[3]	4	0
+Fmt6=unsigned char[4]	4	0
+Fmt7=unsigned char[7]	3	0
+Fmt8=unsigned char[9]	4	0
 [watch_formats]
 Fmt0={W}0:COUNT_Receiver_Login	3	0
 Fmt1={W}0:RAM_rssi_AVG	3	0

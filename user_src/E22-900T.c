@@ -245,6 +245,34 @@ void e22_command_test(uint8_t *com,uint16_t length)
     e22_hal_uart_tx(com,length);
 }
 
+void host_tx_packge(MODE_SET_STU smode,u8 packnum)
+{
+    if(slave_rx_packnum == packnum)
+    {
+        flag_tx_start = 0;
+        time_txcheck = 0;
+    }
+    if(flag_tx_start)
+    {
+        if(time_txcheck == 0 && flag_check_timeout == 0 && smode.enter_step < 6)
+        {
+            time_txcheck = E22_ACK_TIMEOUT + 500;
+            e22_txdata[3] = 0x11;
+            //Display_String(start_x+7*2,smode.enter_step*ycoe+m_y,"               ",15);
+            e22_txdata[1] = smode.enter_step;
+            e22_txdata[2] = user_host_config[smode.enter_step-1].channel; //channel
+            e22_txdata[4] = smode.host_id;  //Host ID
+            e22_hal_uart_tx(e22_txdata,sizeof(e22_txdata));
+            e22_acktime_start(smode.enter_step);
+        }
+    }
+    if(flag_slave_rx)
+    {
+        flag_slave_rx = 0;
+        Display_refresh(start_x+7*2,m_y,rx_slave_id);
+    }
+}
+
 u8 txnum = 0;
 void host_tx_check_slave_sta(MODE_SET_STU smode)
 {
@@ -281,8 +309,6 @@ void host_tx_check_slave_sta(MODE_SET_STU smode)
             {
                 time_txcheck = E22_ACK_TIMEOUT + 500;
                 txnum++;
-                //smode.enter_step = txnum;
-                //e22_user_config_init(smode,txnum);
                 if(flag_tx_open || flag_tx_stop || flag_tx_close)
                 {
                     e22_txdata[3] = 0xF1;
@@ -329,7 +355,7 @@ void slave_tx_sta(u8 num)
             if(key_sta == Key_Open) e22_txdata[5] = 0x08;
             else if(key_sta == Key_Stop) e22_txdata[5] = 0x04;
             else e22_txdata[5] = 0x02;
-            e22_txdata[6] = slave_rx_rssi;
+            e22_txdata[6] = slave_rx_packnum;//slave_rx_rssi;
             e22_hal_uart_tx(e22_txdata,7);
         }
     }
@@ -358,6 +384,7 @@ void e22_check_ack_timeout(void)
 
 void E22_Data_Check(unsigned char *buffer,unsigned long length)
 {
+    u8 i = 0;
     if(mode_sel.Mode_Type == HOST_TYPE)
     {
         if(mode_sel.Mode_Set == NORMAL_MODE && buffer[0] == 0x11 && buffer[1] <= 5)
@@ -365,7 +392,8 @@ void E22_Data_Check(unsigned char *buffer,unsigned long length)
             flag_check_timeout = 0;
             SlaNumStu[buffer[1]].num = buffer[1];
             SlaNumStu[buffer[1]].sta = buffer[2];
-            SlaNumStu[buffer[1]].slave_rssi = buffer[3];
+            //SlaNumStu[buffer[1]].slave_rssi = buffer[3];
+            slave_rx_packnum = buffer[3];
             SlaNumStu[buffer[1]].rssi = buffer[4];
             SlaNumStu[buffer[1]].acktime = time_rxack - SlaNumStu[buffer[1]].oldtime;
             flag_slave_rx = 1;
@@ -381,11 +409,17 @@ void E22_Data_Check(unsigned char *buffer,unsigned long length)
     {
         if(buffer[0] == 0x11)
         {
+            for(i = 3; i < 97; i++) //i==97:The last byte is RSSI.
+            {
+                if(buffer[i] != 0x15) return;
+            }
             slave_rx_hostid = buffer[1];
             slave_rx_rssi = buffer[sizeof(e22_txdata) - 3];
             flag_slave_rx = 1;
             time_slave_ack = 600;    //NORMAL_MODE:slave delay ack to prevent conflicts with relays.RELAY_MODE:no delay.
             beep_led_on();
+            slave_rx_packnum++;
+            if(slave_rx_packnum > 100) slave_rx_packnum = 1;
         }
         else if(buffer[0] == 0xF1)
         {

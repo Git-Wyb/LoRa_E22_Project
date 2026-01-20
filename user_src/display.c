@@ -32,7 +32,7 @@ void menu_start(void)
         Display_String(start_x,m_y+3*ycoe,"3",1);
         Display_String(start_x,m_y+4*ycoe,"4",1);
         Display_String(start_x,m_y+5*ycoe,"5",1);
-        Display_String(start_x,m_y+6*ycoe,"Check All",9);
+        //Display_String(start_x,m_y+6*ycoe,"Check All",9);
     }
     else Display_String(0,0,relay_buf,strlen(relay_buf));
     /*
@@ -58,7 +58,7 @@ void Display_refresh(u8 x,u8 y,u8 snum)
     else if(SlaNumStu[snum].sta == 0x02) n = 2;
 
     memset(charbuf,0,sizeof(charbuf));
-    snprintf(charbuf,20,"%s -%d ",strbuf[n],(256-SlaNumStu[snum].slave_rssi));
+    snprintf(charbuf,20,"%s 0%d ",strbuf[n],(0));//256-SlaNumStu[snum].slave_rssi
     Display_String(x,snum*ycoe+y,"               ",15);
     Display_String(x,snum*ycoe+y,charbuf,strlen(charbuf));
 
@@ -70,6 +70,16 @@ void Display_refresh(u8 x,u8 y,u8 snum)
     snprintf(charbuf,20,"-%ddBm",(256-SlaNumStu[snum].rssi));
     Display_String(start_x,7*ycoe+y,"        ",8);
     Display_String(start_x,7*ycoe+y,charbuf,strlen(charbuf));
+
+    memset(charbuf,0,sizeof(charbuf));
+    snprintf(charbuf,20,"%d:%d/100",snum,slave_rx_packnum);//slave_rx_packnum
+    Display_String(start_x+7*8,7*ycoe+y,"         ",9);
+    Display_String(start_x+7*8,7*ycoe+y,charbuf,strlen(charbuf));
+}
+
+void display_restart(void)
+{
+    Display_String(start_x+7*8,7*ycoe+m_y,"0/100   ",8);
 }
 
 void check_key_sta(void)
@@ -78,20 +88,22 @@ void check_key_sta(void)
     {
         case Key_Up:
             if(key_step>1) key_step--;
-            else key_step = 6;
+            else key_step = 5;      //no check_all
             mode_sel.enter_step = key_step;
             flag_key_enter = 0;
             flag_step = 0;
             key_sta = Key_None;
+            flag_tx_start = 0;
             break;
 
         case Key_Down:
-            if(key_step<6) key_step++;
+            if(key_step<5) key_step++;
             else key_step = 1;
             mode_sel.enter_step = key_step;
             flag_key_enter = 0;
             flag_step = 0;
             key_sta = Key_None;
+            flag_tx_start = 0;
             break;
 
         case Key_Enter:
@@ -99,13 +111,14 @@ void check_key_sta(void)
             flag_tx_start = 1;
             mode_sel.enter_step = key_step;
             key_sta = Key_None;
+            slave_rx_packnum = 0;
             break;
 
         case Key_Open:
             //if(flag_key_enter)
             {
                 e22_txdata[5] = 0x08;
-                flag_tx_start = 1;
+                //flag_tx_start = 1;
                 flag_tx_open = 1;
                 flag_tx_stop = 0;
                 flag_tx_close = 0;
@@ -117,7 +130,7 @@ void check_key_sta(void)
             //if(flag_key_enter)
             {
                 e22_txdata[5] = 0x04;
-                flag_tx_start = 1;
+                //flag_tx_start = 1;
                 flag_tx_stop = 1;
                 flag_tx_close = 0;
                 flag_tx_open = 0;
@@ -129,7 +142,7 @@ void check_key_sta(void)
             //if(flag_key_enter)
             {
                 e22_txdata[5] = 0x02;
-                flag_tx_start = 1;
+                //flag_tx_start = 1;
                 flag_tx_close = 1;
                 flag_tx_stop = 0;
                 flag_tx_open = 0;

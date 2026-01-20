@@ -72,7 +72,8 @@ void main(void)
         if(mode_sel.Mode_Type == HOST_TYPE)
         {
             if(mode_sel.Mode_Set == NORMAL_MODE) check_key_sta();
-            host_tx_check_slave_sta(mode_sel);
+            //host_tx_check_slave_sta(mode_sel);
+            host_tx_packge(mode_sel,100);
             e22_check_ack_timeout();
         }
 

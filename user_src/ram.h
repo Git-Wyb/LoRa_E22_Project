@@ -400,5 +400,6 @@ extern u16 time_slave_ack;
 extern u8 slave_rx_hostid;
 extern u8 key_last_step;
 extern u8 slave_rx_rssi;
+extern u8 slave_rx_packnum;
 
 #endif

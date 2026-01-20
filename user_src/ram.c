@@ -226,4 +226,5 @@ u8 step_tx_timeout = 0;
 u16 time_slave_ack = 0;
 u8 slave_rx_hostid = 14;
 u8 slave_rx_rssi = 0;
+u8 slave_rx_packnum = 0;
 
