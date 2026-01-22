@@ -14,7 +14,8 @@ Slave_Str SlaNumStu[6];
 u8 charbuf[25];
 char *strbuf[] = {"OPEN ","STOP ","CLOSE"};
 char *sfreq[] = {"F:922.2","F:922.4","F:922.6","F:922.8","F:923.0","F:923.2"};
-u8 str_sta[] = {"No State RSSI MS "};
+//u8 str_sta[] = {"No State RSSI MS "};
+u8 str_sta[] = {"No RX_PACKAGE MS "};
 /*
 display_freq(0,8,922200000);
 FreqToString(sbuff,429.175,"MHz");
@@ -56,11 +57,13 @@ void Display_refresh(u8 x,u8 y,u8 snum)
     if(SlaNumStu[snum].sta == 0x08) n = 0;
     else if(SlaNumStu[snum].sta == 0x04) n = 1;
     else if(SlaNumStu[snum].sta == 0x02) n = 2;
-
+    /*
     memset(charbuf,0,sizeof(charbuf));
     snprintf(charbuf,20,"%s 0%d ",strbuf[n],(0));//256-SlaNumStu[snum].slave_rssi
     Display_String(x,snum*ycoe+y,"               ",15);
     Display_String(x,snum*ycoe+y,charbuf,strlen(charbuf));
+    */
+    Display_String(x,snum*ycoe+y,"               ",15);
 
     memset(charbuf,0,sizeof(charbuf));
     snprintf(charbuf,20,"%ld",SlaNumStu[snum].acktime);
@@ -72,9 +75,10 @@ void Display_refresh(u8 x,u8 y,u8 snum)
     Display_String(start_x,7*ycoe+y,charbuf,strlen(charbuf));
 
     memset(charbuf,0,sizeof(charbuf));
-    snprintf(charbuf,20,"%d:%d/100",snum,slave_rx_packnum);//slave_rx_packnum
-    Display_String(start_x+7*8,7*ycoe+y,"         ",9);
-    Display_String(start_x+7*8,7*ycoe+y,charbuf,strlen(charbuf));
+    snprintf(charbuf,20,"%d/100",slave_rx_packnum);//slave_rx_packnum
+    //Display_String(start_x+7*8,7*ycoe+y,"         ",9);
+    //Display_String(start_x+7*8,7*ycoe+y,charbuf,strlen(charbuf));
+    Display_String(x,snum*ycoe+y,charbuf,strlen(charbuf));
 }
 
 void display_restart(void)

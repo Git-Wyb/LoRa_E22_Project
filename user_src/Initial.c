@@ -227,10 +227,10 @@ void E22_GPIO_Init(void)
 void user_mode_init(void)
 {
     u8 si = 0;
-    if(SelDev_ModeIN)
+    //if(SelDev_ModeIN)
         mode_sel.Mode_Set = NORMAL_MODE;
-    else
-        mode_sel.Mode_Set = RELAY_MODE;
+    //else
+        //mode_sel.Mode_Set = RELAY_MODE;
 
     for(si=0; si<5; si++)
     {

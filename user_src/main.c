@@ -68,7 +68,7 @@ void main(void)
     while (1)
     {
         ClearWDT(); // Service the WDT
-        if(mode_sel.Mode_Set != !SelDev_ModeIN) while(1);
+        //if(mode_sel.Mode_Set != !SelDev_ModeIN) while(1);
         if(mode_sel.Mode_Type == HOST_TYPE)
         {
             if(mode_sel.Mode_Set == NORMAL_MODE) check_key_sta();

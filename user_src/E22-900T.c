@@ -200,7 +200,7 @@ void e22_user_config_init(MODE_SET_STU mode)
             if(mode.host_id<HOST_11 || mode.host_id>HOST_15) mode.host_id = HOST_11;
             user_host_config[mode.host_id-11].modu_addr_h = 0x00;
             user_host_config[mode.host_id-11].modu_addr_l = mode.host_id;
-            user_host_config[mode.host_id-11].network_id = 0x08;
+            user_host_config[mode.host_id-11].network_id = 0x07;//0x08;
             if(mode_sel.Mode_Set == NORMAL_MODE) e22_send_userconfig(&user_host_config[mode.host_id-11]);
             else e22_send_userconfig(&user_relay_config);
             break;
@@ -211,7 +211,7 @@ void e22_user_config_init(MODE_SET_STU mode)
             {
                 user_slave_config[mode.salve_id-1].modu_addr_h = 0x00;
                 user_slave_config[mode.salve_id-1].modu_addr_l = mode.salve_id;
-                user_slave_config[mode.salve_id-1].network_id = 0x08;
+                user_slave_config[mode.salve_id-1].network_id = 0x07;
             }
             else
             {
@@ -256,7 +256,7 @@ void host_tx_packge(MODE_SET_STU smode,u8 packnum)
     {
         if(time_txcheck == 0 && flag_check_timeout == 0 && smode.enter_step < 6)
         {
-            time_txcheck = E22_ACK_TIMEOUT + 500;
+            //time_txcheck = E22_ACK_TIMEOUT + 500;
             e22_txdata[3] = 0x11;
             //Display_String(start_x+7*2,smode.enter_step*ycoe+m_y,"               ",15);
             e22_txdata[1] = smode.enter_step;
@@ -416,7 +416,7 @@ void E22_Data_Check(unsigned char *buffer,unsigned long length)
             slave_rx_hostid = buffer[1];
             slave_rx_rssi = buffer[sizeof(e22_txdata) - 3];
             flag_slave_rx = 1;
-            time_slave_ack = 600;    //NORMAL_MODE:slave delay ack to prevent conflicts with relays.RELAY_MODE:no delay.
+            time_slave_ack = 0;//600;    //NORMAL_MODE:slave delay ack to prevent conflicts with relays.RELAY_MODE:no delay.
             beep_led_on();
             slave_rx_packnum++;
             if(slave_rx_packnum > 100) slave_rx_packnum = 1;

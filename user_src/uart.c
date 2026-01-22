@@ -270,6 +270,7 @@ void UART1_Send_Data(unsigned char *P_data, unsigned int length)
 		while (!USART1_SR_TXE)
 			;
 		USART1_DR = *(P_data + i);
+        ClearWDT();
 	}
 	while (!USART1_SR_TC);
 }
