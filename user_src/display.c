@@ -70,7 +70,8 @@ void Display_refresh(u8 x,u8 y,u8 snum)
     Display_String(x+11*7,snum*ycoe+y,charbuf,strlen(charbuf));
 
     memset(charbuf,0,sizeof(charbuf));
-    snprintf(charbuf,20,"-%ddBm",(256-SlaNumStu[snum].rssi));
+    if(SlaNumStu[snum].rssi == 0) snprintf(charbuf,20,"%ddBm",(0));
+    else snprintf(charbuf,20,"-%ddBm",(256-SlaNumStu[snum].rssi));
     Display_String(start_x,7*ycoe+y,"        ",8);
     Display_String(start_x,7*ycoe+y,charbuf,strlen(charbuf));
 
